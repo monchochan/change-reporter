@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#315b50">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="変化発見">
+<link rel="manifest" href="./manifest.webmanifest">
+<title>変化発見レポーター</title>
+<style>
+:root{--green:#315b50;--mint:#e8f1ed;--ink:#20312c;--muted:#6d7b75;--line:#dce5e0;--paper:#f7faf8;--white:#fff;--red:#a34d4d}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
+header{background:var(--green);color:white;padding:calc(16px + env(safe-area-inset-top)) 18px 17px}
+header small{opacity:.8;letter-spacing:.12em;font-size:10px}header h1{font-size:21px;margin:5px 0 0}
+main{max-width:680px;margin:auto;padding:16px 14px 100px}
+nav{position:fixed;z-index:5;bottom:0;left:0;right:0;display:grid;grid-template-columns:repeat(4,1fr);background:#ffffffed;border-top:1px solid var(--line);padding:8px 6px calc(8px + env(safe-area-inset-bottom));backdrop-filter:blur(12px)}
+nav button{border:0;background:none;color:var(--muted);font-size:11px;padding:7px 2px;border-radius:12px}
+nav button b{display:block;font-size:19px;font-weight:500;margin-bottom:3px}
+nav button.active{background:var(--mint);color:var(--green);font-weight:700}
+.panel{display:none}.panel.active{display:block}
+h2{font-size:20px;margin:4px 0 5px}.sub{color:var(--muted);font-size:12px;margin:0 0 17px}
+.card{background:var(--white);border:1px solid var(--line);border-radius:17px;padding:15px;margin:12px 0;box-shadow:0 2px 8px #1b392408}
+label{display:block;font-size:13px;font-weight:650;margin:12px 0 6px}
+input,textarea,select{width:100%;font:inherit;font-size:16px;padding:12px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--ink)}
+input:focus,textarea:focus,select:focus{outline:2px solid #9bbcaf;border-color:var(--green)}
+.row{display:grid;grid-template-columns:1fr 100px;gap:8px}.measure-grid{display:grid;grid-template-columns:1fr;gap:8px}
+button.primary{width:100%;border:0;border-radius:12px;background:var(--green);color:#fff;font-weight:700;font-size:15px;padding:14px;margin-top:16px}
+button.secondary,.smallbtn{border:1px solid var(--line);border-radius:10px;background:white;color:var(--green);padding:9px 11px;font-size:13px}
+.hint{font-size:11px;color:var(--muted);line-height:1.6}.pill{display:inline-block;background:var(--mint);color:var(--green);border-radius:30px;padding:5px 9px;font-size:11px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.stat{background:var(--mint);border-radius:12px;padding:11px 8px}.stat strong{display:block;font-size:19px}.stat span{font-size:10px;color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:12px}th,td{text-align:right;padding:10px 5px;border-bottom:1px solid var(--line)}th:first-child,td:first-child{text-align:left}
+canvas{width:100%;height:230px;display:block}
+.entry{border-bottom:1px solid var(--line);padding:12px 0}.entry:last-child{border:0}.entrytop{display:flex;justify-content:space-between;align-items:center;gap:8px}.entry strong{font-size:14px}.entry p{font-size:12px;color:var(--muted);margin:6px 0}
+.danger{color:var(--red)}.empty{text-align:center;color:var(--muted);padding:28px 8px;font-size:13px}
+dialog{border:0;border-radius:18px;max-width:90%;padding:20px}dialog::backdrop{background:#10251dcc}
+@media(min-width:600px){.measure-grid{grid-template-columns:repeat(3,1fr)}}
+</style>
+</head>
+<body>
+<header><small>OBSERVE · COMPARE · DISCOVER</small><h1>変化発見レポーター</h1></header>
+<main>
+<section id="measure" class="panel active">
+<h2>今日の測定</h2><p class="sub">測定値と条件を記録します。データはこの端末のブラウザ内に保存されます。</p>
+<div class="card">
+<label for="date">測定日</label><input id="date" type="date">
+<div class="measure-grid">
+<div><label for="flaccid">通常時（cm）</label><input id="flaccid" inputmode="decimal" placeholder="例：11.8 または 11.8-12.1"></div>
+<div><label for="stretched">伸展時（cm）</label><input id="stretched" inputmode="decimal" placeholder="例：17.2 または 17.2-17.3"></div>
+<div><label for="erect">勃起時（cm）</label><input id="erect" inputmode="decimal" placeholder="例：15.9"></div>
+</div>
+<label for="memo">メモ・測定条件</label><textarea id="memo" rows="3" placeholder="測定時刻、状態、気づいたことなど"></textarea>
+<button class="primary" id="save">測定を保存</button>
+<p class="hint">同じ測定方法・姿勢・定規の位置をできるだけ保って記録してください。単日の差は測定条件や自然な変動でも生じるため、長期傾向で確認します。</p>
+</div>
+<div class="card"><span class="pill">初回記録</span><h3 style="margin:10px 0 4px">測定方法</h3>
+<p class="hint">通常時：自然な状態で恥骨から亀頭先端。<br>伸展時：無理のない範囲で伸ばし、恥骨から亀頭先端。<br>勃起時：十分な勃起状態で恥骨から亀頭先端。</p></div>
+<div id="saveStatus" class="hint" role="status"></div>
+</section>
+
+<section id="charts" class="panel">
+<h2>変化グラフ</h2><p class="sub">項目ごとの推移。範囲入力は中央の値をプロットします。</p>
+<div class="card"><label for="chartType">表示項目</label><select id="chartType"><option value="flaccid">通常時</option><option value="stretched">伸展時</option><option value="erect">勃起時</option></select><canvas id="chart" width="640" height="300"></canvas><div id="chartSummary" class="hint"></div></div>
+<div class="card"><h3>初回からの比較</h3><div id="comparison" class="stats"></div></div>
+</section>
+
+<section id="history" class="panel">
+<h2>測定履歴</h2><p class="sub">日付順に表示します。記録の修正・削除ができます。</p>
+<div class="card" id="historyList"></div>
+</section>
+
+<section id="settings" class="panel">
+<h2>設定・バックアップ</h2><p class="sub">測定データは外部サーバーへ送信しません。</p>
+<div class="card"><h3>データのバックアップ</h3><p class="hint">JSON形式で全履歴を保存し、あとから復元できます。</p><button class="secondary" id="export">JSONを書き出す</button> <button class="secondary" id="csv">CSVを書き出す</button><label for="importFile">バックアップを復元</label><input id="importFile" type="file" accept=".json,application/json"></div>
+<div class="card"><h3>保存について</h3><p class="hint">このアプリはブラウザのローカルストレージを使用します。同じ端末・同じブラウザで利用してください。Safariの履歴やWebサイトデータを消去すると記録が消える場合があります。定期的にバックアップしてください。</p></div>
+<div class="card"><button class="secondary danger" id="reset">すべての記録を削除</button></div>
+</section>
+</main>
+<nav>
+<button class="active" data-tab="measure"><b>＋</b>測定</button>
+<button data-tab="charts"><b>⌁</b>グラフ</button>
+<button data-tab="history"><b>▤</b>履歴</button>
+<button data-tab="settings"><b>⚙</b>設定</button>
+</nav>
+<dialog id="editDialog"><h3>測定記録を編集</h3><input id="editId" type="hidden"><label>測定日</label><input id="editDate" type="date"><label>通常時（cm）</label><input id="editFlaccid"><label>伸展時（cm）</label><input id="editStretched"><label>勃起時（cm）</label><input id="editErect"><label>メモ</label><textarea id="editMemo" rows="3"></textarea><button class="primary" id="update">変更を保存</button><button class="secondary" id="closeDialog">閉じる</button></dialog>
+<script>
+(()=>{
+'use strict';
+const KEY='changeReporterRecordsV1';
+const $=id=>document.getElementById(id);
+const today=()=>new Date().toLocaleDateString('sv-SE');
+const parseVal=s=>{if(!s||!s.trim())return null;const nums=s.trim().replace(/[〜～]/g,'-').split('-').map(Number);if(nums.some(n=>!Number.isFinite(n)||n<=0))return null;return {raw:s.trim(),value:nums.reduce((a,b)=>a+b,0)/nums.length};};
+const read=()=>{try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch{return []}};
+let records=read();
+const persist=()=>localStorage.setItem(KEY,JSON.stringify(records));
+// 公開ソースに個人の測定値を含めないため、初期データは空で開始します。
+$('date').value=today();
+function show(tab){document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===tab));document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));if(tab==='charts')drawChart();if(tab==='history')renderHistory();if(tab==='charts')renderComparison()}
+document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>show(b.dataset.tab)));
+$('save').addEventListener('click',()=>{
+ const date=$('date').value;if(!date){$('saveStatus').textContent='測定日を入力してください。';return}
+ const vals=['flaccid','stretched','erect'].map(k=>$(k).value.trim());
+ if(vals.every(v=>!v)){ $('saveStatus').textContent='少なくとも1項目を入力してください。';return}
+ for(const v of vals)if(v&&!parseVal(v)){ $('saveStatus').textContent='数値は cm 単位で入力してください（範囲は 11.8-12.1 の形式）。';return}
+ const rec={id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),date,flaccid:vals[0],stretched:vals[1],erect:vals[2],memo:$('memo').value.trim()};
+ const idx=records.findIndex(r=>r.date===date);if(idx>=0){if(!confirm('同じ日付の記録があります。上書きしますか？'))return;records[idx]=rec}else records.push(rec);
+ records.sort((a,b)=>a.date.localeCompare(b.date));persist();$('saveStatus').textContent='保存しました。';['flaccid','stretched','erect','memo'].forEach(k=>$(k).value='');renderHistory();
+});
+function val(r,k){return parseVal(r[k]||'')?.value??null}
+function fmt(v){return v==null?'—':v.toFixed(1)+' cm'}
+function renderComparison(){const keys=['flaccid','stretched','erect'],names=['通常時','伸展時','勃起時'];const first=records.find(r=>keys.some(k=>val(r,k)!=null));$('comparison').innerHTML=keys.map((k,i)=>{const a=first?val(first,k):null;const last=[...records].reverse().find(r=>val(r,k)!=null);const b=last?val(last,k):null;const d=a!=null&&b!=null?(b-a):null;return `<div class="stat"><span>${names[i]}</span><strong>${fmt(b)}</strong><span>初回比 ${d==null?'—':(d>0?'+':'')+d.toFixed(1)+' cm'}</span></div>`}).join('')}
+function drawChart(){const c=$('chart'),ctx=c.getContext('2d'),k=$('chartType').value;ctx.clearRect(0,0,c.width,c.height);const pts=records.map(r=>({date:r.date,v:val(r,k)})).filter(p=>p.v!=null);ctx.strokeStyle='#dce5e0';ctx.lineWidth=1;for(let i=0;i<5;i++){let y=25+i*58;ctx.beginPath();ctx.moveTo(45,y);ctx.lineTo(620,y);ctx.stroke()}if(!pts.length){ctx.fillStyle='#6d7b75';ctx.font='18px sans-serif';ctx.fillText('データがありません',220,150);return}const vs=pts.map(p=>p.v),min=Math.min(...vs)-.5,max=Math.max(...vs)+.5,range=max-min||1;const x=i=>pts.length===1?330:55+i*550/(pts.length-1),y=v=>257-(v-min)/range*220;ctx.strokeStyle='#315b50';ctx.lineWidth=3;ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(x(i),y(p.v)):ctx.moveTo(x(i),y(p.v)));ctx.stroke();pts.forEach((p,i)=>{ctx.fillStyle='#315b50';ctx.beginPath();ctx.arc(x(i),y(p.v),5,0,Math.PI*2);ctx.fill();ctx.fillStyle='#20312c';ctx.font='13px sans-serif';ctx.fillText(p.v.toFixed(1),x(i)-15,y(p.v)-12);ctx.fillStyle='#6d7b75';ctx.font='10px sans-serif';ctx.fillText(p.date.slice(5),x(i)-17,282)});$('chartSummary').textContent=`記録 ${pts.length} 件 · 最小 ${Math.min(...vs).toFixed(1)} cm · 最大 ${Math.max(...vs).toFixed(1)} cm`}
+$('chartType').addEventListener('change',drawChart);
+function renderHistory(){if(!records.length){$('historyList').innerHTML='<div class="empty">まだ記録がありません</div>';return}
+$('historyList').innerHTML=[...records].sort((a,b)=>b.date.localeCompare(a.date)).map(r=>`<div class="entry"><div class="entrytop"><strong>${escapeHtml(r.date)}</strong><button class="smallbtn" data-edit="${escapeHtml(r.id)}">編集</button></div><p>通常時：${escapeHtml(r.flaccid||'—')} cm　/　伸展時：${escapeHtml(r.stretched||'—')} cm　/　勃起時：${escapeHtml(r.erect||'—')} cm</p>${r.memo?`<p>${escapeHtml(r.memo)}</p>`:''}<button class="smallbtn danger" data-delete="${escapeHtml(r.id)}">削除</button></div>`).join('');
+$('historyList').querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>edit(b.dataset.edit));$('historyList').querySelectorAll('[data-delete]').forEach(b=>b.onclick=()=>{if(confirm('この記録を削除しますか？')){records=records.filter(r=>r.id!==b.dataset.delete);persist();renderHistory();renderComparison()}})}
+function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function edit(id){const r=records.find(x=>x.id===id);if(!r)return;$('editId').value=id;$('editDate').value=r.date;$('editFlaccid').value=r.flaccid;$('editStretched').value=r.stretched;$('editErect').value=r.erect;$('editMemo').value=r.memo||'';$('editDialog').showModal()}
+$('update').onclick=()=>{const id=$('editId').value,r=records.find(x=>x.id===id);if(!r)return;Object.assign(r,{date:$('editDate').value,flaccid:$('editFlaccid').value,stretched:$('editStretched').value,erect:$('editErect').value,memo:$('editMemo').value});records.sort((a,b)=>a.date.localeCompare(b.date));persist();$('editDialog').close();renderHistory();renderComparison();drawChart()};
+$('closeDialog').onclick=()=>$('editDialog').close();
+$('export').onclick=()=>download('change-reporter-backup.json',JSON.stringify(records,null,2),'application/json');
+$('csv').onclick=()=>{const rows=[['date','flaccid_cm','stretched_cm','erect_cm','memo'],...records.map(r=>[r.date,r.flaccid,r.stretched,r.erect,r.memo||''])];download('change-reporter.csv',rows.map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\n'),'text/csv')};
+function download(name,data,type){const a=document.createElement('a'),u=URL.createObjectURL(new Blob([data],{type}));a.href=u;a.download=name;a.click();URL.revokeObjectURL(u)}
+$('importFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{if(f.size>1_000_000)throw Error('large');const x=JSON.parse(await f.text());if(!Array.isArray(x)||x.length>5000)throw Error('format');const clean=x.map((r,i)=>{if(!r||typeof r!=='object'||typeof r.date!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(r.date))throw Error('record');const d=new Date(r.date+'T00:00:00');if(Number.isNaN(d.getTime())||d.toISOString().slice(0,10)!==r.date)throw Error('date');const out={id:typeof r.id==='string'&&r.id.length<=80?r.id:('import-'+i+'-'+Date.now()),date:r.date,memo:typeof r.memo==='string'?r.memo.slice(0,500):''};for(const k of ['flaccid','stretched','erect']){const v=r[k];if(v==null||v==='')out[k]='';else if(typeof v==='string'&&v.length<=30&&parseVal(v))out[k]=v;else throw Error('value')}return out});if(confirm('現在の履歴を置き換えて復元しますか？')){records=clean;persist();renderHistory();renderComparison();drawChart();alert('復元しました')}}catch{alert('バックアップファイルを読み込めませんでした。形式・内容・サイズを確認してください。')}e.target.value=''};
+$('reset').onclick=()=>{if(confirm('すべての測定履歴を削除します。事前にバックアップしましたか？')&&confirm('本当に削除しますか？')){records=[];persist();renderHistory();renderComparison();drawChart()}};
+renderHistory();renderComparison();
+if('serviceWorker' in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{});
+})();
+</script>
+</body></html>

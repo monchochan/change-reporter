@@ -1,0 +1,10 @@
+{
+  "name": "変化発見レポーター",
+  "short_name": "変化発見",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f7faf8",
+  "theme_color": "#315b50",
+  "lang": "ja",
+  "icons": []
+}
